@@ -1,14 +1,11 @@
 import math
-from typing import Iterable, List
 
 import torch
-from shapeless import fluid, liquid
+from shapeless import liquid
 from torch import Tensor, nn
 from torch.nn import Transformer
-from torchtext.data.utils import get_tokenizer
-from torchtext.datasets import Multi30k, multi30k
-from torchtext.vocab import build_vocab_from_iterator
 
+# embeds
 
 @liquid
 class PositionalEncoding(nn.Module):
@@ -44,6 +41,7 @@ class TokenEmbedding(nn.Module):
     
 
 #TRANSFORMER
+
 @liquid #liquid removes the need for __init__ and to specify types, it uses Poly type
 class Seq2SeqTransformer(nn.Module):
     num_encoder_layers = None
@@ -95,6 +93,8 @@ class Seq2SeqTransformer(nn.Module):
             tgt_padding_mask,
             memory_key_padding_mask
         )
+        
+        return outs
     
     def encode(
         self,
