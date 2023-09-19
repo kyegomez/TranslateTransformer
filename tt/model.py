@@ -44,32 +44,17 @@ class TokenEmbedding(nn.Module):
 
 @liquid #liquid removes the need for __init__ and to specify types, it uses Poly type
 class Seq2SeqTransformer(nn.Module):
-    num_encoder_layers = None
-    num_decoder_layers = None
+    num_encoder_layers = 6
+    num_decoder_layers = 6
     
-    emb_size = None
-    nhead = None
-    src_vocab_size = None
+    emb_size = 512
+    nhead = 8
+    src_vocab_size = 10000
     
-    tgt_vocab_size = None
-    dim_feedforward = None
-    dropout = None
+    tgt_vocab_size = 10000
+    dim_feedforward = 2048
+    dropout = 0.1
 
-    transformer = Transformer(
-        d_model=emb_size,
-        nhead=nhead,
-        num_encoder_layers=num_encoder_layers,
-        num_decoder_layers=num_decoder_layers,
-        dim_feedforward=dim_feedforward,
-        dropout=dropout
-    )
-    generator = nn.Linear(emb_size, tgt_vocab_size)
-    
-    src_tok_emb = TokenEmbedding(src_vocab_size, emb_size)
-    
-    tgt_tok_emb = TokenEmbedding(tgt_vocab_size, emb_size)
-    
-    positional_encoding = PositionalEncoding(emb_size, dropout)
     
     def forward(
         self,
@@ -81,8 +66,25 @@ class Seq2SeqTransformer(nn.Module):
         tgt_padding_mask: Tensor,
         memory_key_padding_mask: Tensor
     ):
+        self.transformer = Transformer(
+            d_model=self.emb_size,
+            nhead=self.nhead,
+            num_encoder_layers=self.num_encoder_layers,
+            num_decoder_layers=self.num_decoder_layers,
+            dim_feedforward=self.dim_feedforward,
+            dropout=self.dropout
+        )
+        self.generator = nn.Linear(self.emb_size, self.tgt_vocab_size)
+        
+        self.src_tok_emb = TokenEmbedding(self.src_vocab_size, self.emb_size)
+        
+        self.tgt_tok_emb = TokenEmbedding(self.tgt_vocab_size, self.emb_size)
+        
+        self.positional_encoding = PositionalEncoding(self.emb_size, self.dropout)
+
         src_emb = self.positional_encoding(self.src_tok_emb(src))
         tgt_emb = self.positional_encoding(self.tgt_tok_emb(trg))
+        
         outs = self.transformer(
             src_emb,
             tgt_emb,
