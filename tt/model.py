@@ -4,6 +4,7 @@ import torch
 from shapeless import liquid
 from torch import Tensor, nn
 from torch.nn import Transformer
+from dataclasses import dataclass
 
 # embeds
 
@@ -31,7 +32,8 @@ class PositionalEncoding(nn.Module):
         self.register_buffer("pos_embedding", pos_embedding)
 
         return self.dropout(token, pos_embedding)
-    
+
+@liquid  
 class TokenEmbedding(nn.Module):
     vocab_size = None
     emb_size = None
@@ -55,17 +57,7 @@ class Seq2SeqTransformer(nn.Module):
     dim_feedforward = 2048
     dropout = 0.1
 
-    
-    def forward(
-        self,
-        src: Tensor,
-        trg: Tensor,
-        src_mask: Tensor,
-        tgt_mask: Tensor,
-        src_padding_mask: Tensor,
-        tgt_padding_mask: Tensor,
-        memory_key_padding_mask: Tensor
-    ):
+    def __post_init__(self):
         self.transformer = Transformer(
             d_model=self.emb_size,
             nhead=self.nhead,
@@ -81,10 +73,19 @@ class Seq2SeqTransformer(nn.Module):
         self.tgt_tok_emb = TokenEmbedding(self.tgt_vocab_size, self.emb_size)
         
         self.positional_encoding = PositionalEncoding(self.emb_size, self.dropout)
-
+    
+    def forward(
+        self,
+        src: Tensor,
+        trg: Tensor,
+        src_mask: Tensor,
+        tgt_mask: Tensor,
+        src_padding_mask: Tensor,
+        tgt_padding_mask: Tensor,
+        memory_key_padding_mask: Tensor
+    ):
         src_emb = self.positional_encoding(self.src_tok_emb(src))
         tgt_emb = self.positional_encoding(self.tgt_tok_emb(trg))
-        
         outs = self.transformer(
             src_emb,
             tgt_emb,
